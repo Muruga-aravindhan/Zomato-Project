@@ -147,23 +147,39 @@ def main():
             group by c.location
             order by total_orders desc limit 10; """, 
             #Q3
-             """ select order_id, customer_id, restaurant_id, order_date,
-            status
-            from orders 
-            where status = 'Cancelled'; """,
+             """ SELECT o.order_id, 
+       o.customer_id, 
+       c.name AS customer_name, 
+       o.restaurant_id, 
+       r.name AS restaurant_name, 
+       o.order_date, 
+       o.status
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+WHERE o.status = 'Cancelled'; """,
             #Q4
-            """ select d.order_id, d.delivery_person_id,d.delivery_time as actual_time,
-            estimated_time,
-            (d.delivery_time - d.estimated_time) as dealy_minutes
-            from deliveries d
-            where d.delivery_time > d.estimated_time
-            order by dealy_minutes desc;""",
+            """ SELECT d.order_id, 
+       d.delivery_person_id, 
+       dp.name AS delivery_person_name, 
+       d.delivery_time AS actual_time, 
+       d.estimated_time, 
+       (d.delivery_time - d.estimated_time) AS delay_minutes
+FROM deliveries d
+JOIN delivery_persons dp ON d.delivery_person_id = dp.delivery_person_id
+WHERE d.delivery_time > d.estimated_time
+ORDER BY delay_minutes DESC;
+""",
             #Q5
-            """ select d.delivery_person_id, count(d.delivery_id) as dealy_deliveries
-            from deliveries d 
-            where d.delivery_time > d.estimated_time
-            group by d.delivery_person_id
-            order by dealy_deliveries desc;  """,
+            """ SELECT d.delivery_person_id, 
+       dp.name AS delivery_person_name, 
+       dp.contact_number, 
+       COUNT(d.delivery_id) AS delay_deliveries
+FROM deliveries d
+JOIN delivery_persons dp ON d.delivery_person_id = dp.delivery_person_id
+WHERE d.delivery_time > d.estimated_time
+GROUP BY d.delivery_person_id, dp.name, dp.contact_number
+ORDER BY delay_deliveries DESC;  """,
             #Q6
             """ select 
 	        o.restaurant_id,
@@ -186,16 +202,29 @@ def main():
             order by customer_count
             desc limit 6;  """,
             #Q9
-            """select customer_id,sum(total_amount) as Total_spent_Amount
-            from orders
-            group by customer_id
-            order by Total_spent_Amount desc limit 10;""",
+            """SELECT o.customer_id, 
+       c.name AS customer_name, 
+       c.phone, 
+       SUM(o.total_amount) AS total_spent_amount
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+GROUP BY o.customer_id, c.name, c.phone
+ORDER BY total_spent_amount DESC
+LIMIT 10;
+""",
             #Q10
             """ select vehicle_type,avg(delivery_time) as avg_delivery_time 
             from deliveries group by vehicle_type order by avg_delivery_time desc; """,
             #Q11
-            """ select delivery_person_id,count(*) as total_deliveries
-            from deliveries group by delivery_person_id order by total_deliveries desc limit 10;""",
+            """ SELECT d.delivery_person_id, 
+       dp.name AS delivery_person_name, 
+       dp.contact_number, 
+       COUNT(*) AS total_deliveries
+FROM deliveries d
+JOIN delivery_persons dp ON d.delivery_person_id = dp.delivery_person_id
+GROUP BY d.delivery_person_id, dp.name, dp.contact_number
+ORDER BY total_deliveries DESC
+LIMIT 10;""",
             #Q12
             """ select vehicle_type, count(*) as usage_count 
             from deliveries group by vehicle_type order by usage_count desc; """,
@@ -205,10 +234,14 @@ def main():
             join restaurants r on o.restaurant_id = r.restaurant_id group by r.name 
             order by total_orders desc limit 10;  """,
             #Q14
-            """ select r.name,avg(o.total_amount) as avg_order_value 
-            from orders o 
-            join restaurants r on o.restaurant_id = r.restaurant_id 
-            group by r.name order by avg_order_value desc limit 10;""",
+            """ SELECT r.name AS restaurant_name, 
+       CAST(AVG(o.total_amount) AS UNSIGNED) AS avg_order_Amount
+FROM orders o
+JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+GROUP BY r.restaurant_id, r.name
+ORDER BY avg_order_Amount DESC
+LIMIT 10;
+""",
             #Q15
             """ select name,rating from restaurants order by rating desc limit 10;""",
             #Q16
@@ -217,7 +250,13 @@ def main():
             """ select payment_mode,count(*) as usage_count 
             from orders group by payment_mode order by usage_count desc;""",
             #Q18
-            """ select avg(discount_applied) as avg_discount from orders;  """,
+            """ SELECT order_id, 
+       CAST(AVG(discount_applied) AS DECIMAL(10,2)) AS avg_discount
+FROM orders
+GROUP BY order_id
+HAVING avg_discount <= 60
+ORDER BY avg_discount DESC;
+ """,
             #Q19
             """ select location,count(*) as total_restaurants 
             from restaurants group by location order by total_restaurants desc limit 15;""",
